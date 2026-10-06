@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Video Maker</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #10131a;
+      color: white;
+    }
+
+    .app {
+      max-width: 700px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+    }
+
+    .box {
+      background: #1a1f29;
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      box-sizing: border-box;
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      background: #0d1016;
+      color: white;
+      font-size: 16px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: #7c3aed;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #0d1016;
+      border-radius: 12px;
+      min-height: 80px;
+    }
+
+    .scene {
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #263c75, #6d3b6d);
+    }
+
+    .download {
+      background: #238636;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>🎬 AI Video Maker</h1>
+
+  <p class="subtitle">
+    Write a story and turn it into a video
+  </p>
+
+  <div class="box">
+
+    <h2>✍️ Your Story</h2>
+
+    <textarea id="story"
+      placeholder="Write your story here..."></textarea>
+
+    <button onclick="createVideo()">
+      ✨ Create Video
+    </button>
+
+    <div id="result">
+      Your video will appear here.
+    </div>
+
+    <button class="download"
+      onclick="downloadStory()">
+      ⬇️ Download
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+function createVideo() {
+
+  let story = document.getElementById("story").value;
+
+  if (story.trim() === "") {
+    alert("Please write a story first.");
+    return;
+  }
+
+  let sentences = story
+    .split(/[.!?]+/)
+    .filter(x => x.trim() !== "");
+
+  let result = document.getElementById("result");
+
+  result.innerHTML = "";
+
+  sentences.forEach(function(sentence, index) {
+
+    let scene = document.createElement("div");
+
+    scene.className = "scene";
+
+    scene.innerHTML =
+      "<b>Scene " + (index + 1) + "</b><br><br>" +
+      sentence.trim();
+
+    result.appendChild(scene);
+
+  });
+
+  if ("speechSynthesis" in window) {
+
+    let voice = new SpeechSynthesisUtterance(story);
+
+    voice.rate = 0.9;
+    voice.pitch = 1;
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(voice);
+
+  }
+
+}
+
+function downloadStory() {
+
+  let story = document.getElementById("story").value;
+
+  if (story.trim() === "") {
+    alert("Write a story first.");
+    return;
+  }
+
+  let file = new Blob(
+    [story],
+    { type: "text/plain" }
+  );
+
+  let url = URL.createObjectURL(file);
+
+  let link = document.createElement("a");
+
+  link.href = url;
+  link.download = "my-ai-video-story.txt";
+
+  link.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+</script>
+
+</body>
+</html>
