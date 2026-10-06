@@ -170,10 +170,17 @@ Your scenes will appear below.
 
 <div id="result"></div>
 
-<canvas id="videoCanvas" width="720" height="1280"
-style="display:none;"></canvas>
+<canvas
+id="videoCanvas"
+width="720"
+height="1280"
+style="display:none;">
+</canvas>
 
-<video id="videoPreview" controls></video>
+<video
+id="videoPreview"
+controls>
+</video>
 
 <button class="voice" onclick="readStory()">
 🔊 Play Voice
@@ -296,7 +303,7 @@ function readStory() {
 }
 
 
-/* CREATE REAL VIDEO */
+/* CREATE VIDEO */
 
 async function createVideoFile() {
 
@@ -367,7 +374,6 @@ async function createVideoFile() {
 
   };
 
-
   recorder.onstop = function() {
 
     const blob =
@@ -405,12 +411,10 @@ async function createVideoFile() {
 
   };
 
-
   recorder.start();
 
   document.getElementById("status").textContent =
     "🎬 Creating video...";
-
 
   for (let i = 0; i < scenes.length; i++) {
 
@@ -424,12 +428,11 @@ async function createVideoFile() {
     await wait(3000);
   }
 
-
   recorder.stop();
 }
 
 
-/* DRAW VIDEO SCENE */
+/* DRAW SCENE */
 
 function drawScene(
   ctx,
@@ -475,7 +478,6 @@ function drawScene(
     height
   );
 
-
   ctx.fillStyle = "white";
 
   ctx.font =
@@ -485,11 +487,10 @@ function drawScene(
     "center";
 
   ctx.fillText(
-    "🎬 AI VIDEO MAKER",
+    "AI VIDEO MAKER",
     width / 2,
     100
   );
-
 
   ctx.font =
     "bold 30px Arial";
@@ -499,7 +500,6 @@ function drawScene(
     width / 2,
     180
   );
-
 
   ctx.font =
     "32px Arial";
@@ -561,9 +561,7 @@ function wrapText(
 
       line = word;
 
-    }
-
-    else {
+    } else {
 
       line = test;
 
