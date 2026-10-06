@@ -1,119 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Video Maker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #10131a;
-      color: white;
-    }
+<title>AI Video Maker</title>
 
-    .app {
-      max-width: 700px;
-      margin: auto;
-      padding: 20px;
-    }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    h1 {
-      text-align: center;
-      margin-bottom: 5px;
-    }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b1020;
+  color: white;
+}
 
-    .subtitle {
-      text-align: center;
-      color: #aaa;
-    }
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 20px;
+}
 
-    .box {
-      background: #1a1f29;
-      padding: 20px;
-      border-radius: 15px;
-      margin-top: 20px;
-    }
+h1 {
+  text-align: center;
+  font-size: 32px;
+}
 
-    textarea {
-      width: 100%;
-      height: 180px;
-      box-sizing: border-box;
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid #444;
-      background: #0d1016;
-      color: white;
-      font-size: 16px;
-      resize: vertical;
-    }
+.subtitle {
+  text-align: center;
+  color: #aeb7cc;
+}
 
-    button {
-      width: 100%;
-      margin-top: 15px;
-      padding: 15px;
-      border: none;
-      border-radius: 12px;
-      background: #7c3aed;
-      color: white;
-      font-size: 17px;
-      font-weight: bold;
-    }
+.card {
+  background: #151c30;
+  padding: 20px;
+  border-radius: 18px;
+  margin-top: 20px;
+}
 
-    button:active {
-      transform: scale(0.98);
-    }
+label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
 
-    #result {
-      margin-top: 20px;
-      padding: 15px;
-      background: #0d1016;
-      border-radius: 12px;
-      min-height: 80px;
-    }
+textarea,
+select,
+input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #39435e;
+  background: #0d1324;
+  color: white;
+  font-size: 16px;
+}
 
-    .scene {
-      margin-bottom: 15px;
-      padding: 15px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #263c75, #6d3b6d);
-    }
+textarea {
+  height: 180px;
+  resize: vertical;
+}
 
-    .download {
-      background: #238636;
-    }
-  </style>
+button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.create {
+  background: #7c3aed;
+  color: white;
+}
+
+.voice {
+  background: #2563eb;
+  color: white;
+}
+
+.download {
+  background: #16a34a;
+  color: white;
+}
+
+.scene {
+  padding: 18px;
+  margin-top: 12px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #263b73, #542d64);
+}
+
+.scene-number {
+  font-size: 14px;
+  color: #cbd5ff;
+}
+
+.scene-text {
+  margin-top: 8px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.status {
+  text-align: center;
+  color: #aeb7cc;
+  margin-top: 15px;
+}
+</style>
 </head>
 
 <body>
 
-<div class="app">
+<div class="container">
 
   <h1>🎬 AI Video Maker</h1>
 
   <p class="subtitle">
-    Write a story and turn it into a video
+    Turn your story into scenes
   </p>
 
-  <div class="box">
+  <div class="card">
 
-    <h2>✍️ Your Story</h2>
+    <label>📝 Your Story</label>
 
     <textarea id="story"
       placeholder="Write your story here..."></textarea>
 
-    <button onclick="createVideo()">
+    <label>🎨 Video Style</label>
+
+    <select id="style">
+      <option>Cartoon</option>
+      <option>Fantasy</option>
+      <option>Adventure</option>
+      <option>Kids Story</option>
+      <option>Realistic</option>
+    </select>
+
+    <label>🎬 Number of Scenes</label>
+
+    <select id="sceneCount">
+      <option value="3">3 scenes</option>
+      <option value="5" selected>5 scenes</option>
+      <option value="8">8 scenes</option>
+    </select>
+
+    <button class="create" onclick="createVideo()">
       ✨ Create Video
     </button>
 
-    <div id="result">
-      Your video will appear here.
-    </div>
+    <p class="status" id="status">
+      Your scenes will appear below.
+    </p>
 
-    <button class="download"
-      onclick="downloadStory()">
-      ⬇️ Download
+    <div id="result"></div>
+
+    <button class="voice" onclick="readStory()">
+      🔊 Play Voice
+    </button>
+
+    <button class="download" onclick="downloadStory()">
+      ⬇️ Download Story
     </button>
 
   </div>
@@ -124,74 +178,106 @@
 
 function createVideo() {
 
-  let story = document.getElementById("story").value;
+  const story = document.getElementById("story").value.trim();
+  const style = document.getElementById("style").value;
+  const count = Number(document.getElementById("sceneCount").value);
 
-  if (story.trim() === "") {
+  if (!story) {
+    alert("Please write your story first.");
+    return;
+  }
+
+  const sentences = story
+    .split(/[.!?]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const result = document.getElementById("result");
+
+  result.innerHTML = "";
+
+  for (let i = 0; i < count; i++) {
+
+    let text;
+
+    if (sentences.length > 0) {
+      text = sentences[i % sentences.length];
+    } else {
+      text = story;
+    }
+
+    const scene = document.createElement("div");
+
+    scene.className = "scene";
+
+    scene.innerHTML = `
+      <div class="scene-number">
+        🎬 Scene ${i + 1} • ${style}
+      </div>
+
+      <div class="scene-text">
+        ${text}
+      </div>
+    `;
+
+    result.appendChild(scene);
+  }
+
+  document.getElementById("status").textContent =
+    "✨ Your video scenes are ready!";
+}
+
+
+function readStory() {
+
+  const story = document.getElementById("story").value.trim();
+
+  if (!story) {
     alert("Please write a story first.");
     return;
   }
 
-  let sentences = story
-    .split(/[.!?]+/)
-    .filter(x => x.trim() !== "");
-
-  let result = document.getElementById("result");
-
-  result.innerHTML = "";
-
-  sentences.forEach(function(sentence, index) {
-
-    let scene = document.createElement("div");
-
-    scene.className = "scene";
-
-    scene.innerHTML =
-      "<b>Scene " + (index + 1) + "</b><br><br>" +
-      sentence.trim();
-
-    result.appendChild(scene);
-
-  });
-
-  if ("speechSynthesis" in window) {
-
-    let voice = new SpeechSynthesisUtterance(story);
-
-    voice.rate = 0.9;
-    voice.pitch = 1;
-
-    speechSynthesis.cancel();
-    speechSynthesis.speak(voice);
-
-  }
-
-}
-
-function downloadStory() {
-
-  let story = document.getElementById("story").value;
-
-  if (story.trim() === "") {
-    alert("Write a story first.");
+  if (!("speechSynthesis" in window)) {
+    alert("Voice is not supported by this browser.");
     return;
   }
 
-  let file = new Blob(
+  speechSynthesis.cancel();
+
+  const voice =
+    new SpeechSynthesisUtterance(story);
+
+  voice.rate = 0.9;
+  voice.pitch = 1;
+
+  speechSynthesis.speak(voice);
+}
+
+
+function downloadStory() {
+
+  const story = document.getElementById("story").value.trim();
+
+  if (!story) {
+    alert("Please write a story first.");
+    return;
+  }
+
+  const file = new Blob(
     [story],
-    { type: "text/plain" }
+    {type: "text/plain"}
   );
 
-  let url = URL.createObjectURL(file);
+  const url = URL.createObjectURL(file);
 
-  let link = document.createElement("a");
+  const link = document.createElement("a");
 
   link.href = url;
-  link.download = "my-ai-video-story.txt";
+  link.download = "my-video-story.txt";
 
   link.click();
 
   URL.revokeObjectURL(url);
-
 }
 
 </script>
