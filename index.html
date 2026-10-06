@@ -166,10 +166,11 @@ button {
       🔊 Play Voice
     </button>
 
-    <button class="download" onclick="downloadStory()">
-      ⬇️ Download Story
-    </button>
-
+    <button class="download" onclick="createVideoFile()">
+  🎬 Create & Download Video
+</button> 
+  </button>
+    
   </div>
 
 </div>
@@ -279,7 +280,23 @@ function downloadStory() {
 
   URL.revokeObjectURL(url);
 }
+function createVideoFile() {
+  const story = document.getElementById("story").value.trim();
 
+  if (!story) {
+    alert("Please write your story first.");
+    return;
+  }
+
+  const status = document.getElementById("status");
+
+  status.textContent = "🎬 Creating your video...";
+
+  setTimeout(() => {
+    alert("The video creator is ready for the next step!");
+    status.textContent = "✨ Video creation started!";
+  }, 1000);
+}
 </script>
 
 </body>
