@@ -7,6 +7,7 @@
 <title>AI Video Maker</title>
 
 <style>
+
 * {
   box-sizing: border-box;
 }
@@ -155,7 +156,8 @@ Turn your story into an illustrated video
 
 <textarea
 id="story"
-placeholder="Write your story here..."></textarea>
+placeholder="Write your story here..."
+></textarea>
 
 <label>🎨 Video Style</label>
 
@@ -205,6 +207,8 @@ Write your story and create scenes.
 
 <script>
 
+/* VARIABLES */
+
 let scenes = [];
 let images = [];
 
@@ -227,10 +231,11 @@ function createScenes() {
     return;
   }
 
-  const sentences = story
-    .split(/[.!?]+/)
-    .map(s => s.trim())
-    .filter(Boolean);
+  const sentences =
+    story
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
 
   scenes = [];
   images = [];
@@ -255,6 +260,7 @@ function createScenes() {
     scene.className = "scene";
 
     scene.innerHTML = `
+
       <div class="scene-number">
         🎬 Scene ${i + 1} • ${style}
       </div>
@@ -264,6 +270,7 @@ function createScenes() {
       </div>
 
       <div class="image-container"></div>
+
     `;
 
     result.appendChild(scene);
@@ -318,14 +325,20 @@ async function generateImages() {
         document.createElement("img");
 
       if (typeof image === "string") {
+
         img.src = image;
+
       } else if (image && image.src) {
+
         img.src = image.src;
+
       } else if (image && image.url) {
+
         img.src = image.url;
       }
 
-      img.alt = "AI scene " + (i + 1);
+      img.alt =
+        "AI scene " + (i + 1);
 
       containers[i].appendChild(img);
 
@@ -359,12 +372,20 @@ function readStory() {
     document.getElementById("story").value.trim();
 
   if (!story) {
-    alert("Please write your story first.");
+
+    alert(
+      "Please write your story first."
+    );
+
     return;
   }
 
   if (!("speechSynthesis" in window)) {
-    alert("Voice is not supported by this browser.");
+
+    alert(
+      "Voice is not supported by this browser."
+    );
+
     return;
   }
 
@@ -386,39 +407,65 @@ function waitForImage(img) {
 
   return new Promise((resolve, reject) => {
 
-    if (img.complete && img.naturalWidth > 0) {
+    if (
+      img.complete &&
+      img.naturalWidth > 0
+    ) {
+
       resolve();
+
       return;
     }
 
-    img.onload = () => resolve();
+    img.onload =
+      () => resolve();
 
-    img.onerror = () =>
-      reject(new Error("Image failed to load."));
+    img.onerror =
+      () =>
+        reject(
+          new Error("Image failed to load.")
+        );
   });
 }
 
 
-/* DRAW IMAGE TO CANVAS */
+/* DRAW IMAGE */
 
-function drawImageCover(ctx, img, canvas) {
+function drawImageCover(
+  ctx,
+  img,
+  canvas
+) {
 
-  const canvasWidth = canvas.width;
-  const canvasHeight = canvas.height;
+  const canvasWidth =
+    canvas.width;
 
-  const imageWidth = img.naturalWidth;
-  const imageHeight = img.naturalHeight;
+  const canvasHeight =
+    canvas.height;
 
-  const scale = Math.max(
-    canvasWidth / imageWidth,
-    canvasHeight / imageHeight
-  );
+  const imageWidth =
+    img.naturalWidth;
 
-  const width = imageWidth * scale;
-  const height = imageHeight * scale;
+  const imageHeight =
+    img.naturalHeight;
 
-  const x = (canvasWidth - width) / 2;
-  const y = (canvasHeight - height) / 2;
+  const scale =
+    Math.max(
+      canvasWidth / imageWidth,
+      canvasHeight / imageHeight
+    );
+
+  const width =
+    imageWidth * scale;
+
+  const height =
+    imageHeight * scale;
+
+  const x =
+    (canvasWidth - width) / 2;
+
+  const y =
+    (canvasHeight - height) / 2;
 
   ctx.drawImage(
     img,
@@ -430,7 +477,7 @@ function drawImageCover(ctx, img, canvas) {
 }
 
 
-/* CREATE VIDEO */
+/* CREATE VIDEO WITH VOICE */
 
 async function createVideoFile() {
 
@@ -443,7 +490,9 @@ async function createVideoFile() {
     return;
   }
 
-  if (!HTMLCanvasElement.prototype.captureStream) {
+  if (
+    !HTMLCanvasElement.prototype.captureStream
+  ) {
 
     alert(
       "Your browser does not support video recording. Please use Chrome."
@@ -456,89 +505,237 @@ async function createVideoFile() {
     document.getElementById("status");
 
   status.textContent =
-    "🎬 Preparing your video...";
-
-  const canvas =
-    document.createElement("canvas");
-
-  canvas.width = 720;
-  canvas.height = 1280;
-
-  const ctx =
-    canvas.getContext("2d");
-
-  let stream;
+    "🎙️ Creating narration...";
 
   try {
 
-    stream =
-      canvas.captureStream(30);
+    /*
+      CREATE AI VOICE
+    */
 
-  } catch (error) {
+    const story =
+      document
+        .getElementById("story")
+        .value
+        .trim();
 
-    alert(
-      "Your browser could not start video recording."
-    );
+    const audio =
+      await puter.ai.txt2speech(story);
 
-    return;
-  }
+    if (!audio) {
 
-  let mimeType = "";
-
-  if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
-
-    mimeType =
-      "video/webm;codecs=vp9";
-
-  } else if (MediaRecorder.isTypeSupported("video/webm")) {
-
-    mimeType =
-      "video/webm";
-
-  } else {
-
-    alert(
-      "This browser cannot create a downloadable video."
-    );
-
-    return;
-  }
-
-  const recorder =
-    new MediaRecorder(
-      stream,
-      { mimeType: mimeType }
-    );
-
-  const chunks = [];
-
-  recorder.ondataavailable = event => {
-
-    if (event.data.size > 0) {
-      chunks.push(event.data);
+      throw new Error(
+        "Voice was not created."
+      );
     }
 
-  };
 
-  const finished =
-    new Promise(resolve => {
+    /*
+      WAIT FOR AUDIO
+    */
 
-      recorder.onstop = resolve;
+    await new Promise(
+      (resolve, reject) => {
 
-    });
+        if (
+          audio.readyState >= 1
+        ) {
 
-  recorder.start();
+          resolve();
 
-  try {
+          return;
+        }
 
-    for (let i = 0; i < images.length; i++) {
+        audio.onloadedmetadata =
+          resolve;
 
-      const img = images[i];
+        audio.onerror =
+          reject;
+
+      }
+    );
+
+
+    /*
+      CREATE CANVAS
+    */
+
+    const canvas =
+      document.createElement("canvas");
+
+    canvas.width =
+      720;
+
+    canvas.height =
+      1280;
+
+    const ctx =
+      canvas.getContext("2d");
+
+
+    /*
+      VIDEO STREAM
+    */
+
+    const videoStream =
+      canvas.captureStream(30);
+
+
+    /*
+      AUDIO STREAM
+    */
+
+    let audioStream;
+
+    if (
+      audio.captureStream
+    ) {
+
+      audioStream =
+        audio.captureStream();
+
+    } else if (
+      audio.mozCaptureStream
+    ) {
+
+      audioStream =
+        audio.mozCaptureStream();
+
+    } else {
+
+      alert(
+        "Your browser cannot add the voice to the video."
+      );
+
+      return;
+    }
+
+
+    /*
+      ADD AUDIO TO VIDEO
+    */
+
+    audioStream
+      .getAudioTracks()
+      .forEach(track => {
+
+        videoStream.addTrack(track);
+
+      });
+
+
+    /*
+      VIDEO FORMAT
+    */
+
+    let mimeType = "";
+
+    if (
+      MediaRecorder.isTypeSupported(
+        "video/webm;codecs=vp9,opus"
+      )
+    ) {
+
+      mimeType =
+        "video/webm;codecs=vp9,opus";
+
+    } else if (
+      MediaRecorder.isTypeSupported(
+        "video/webm"
+      )
+    ) {
+
+      mimeType =
+        "video/webm";
+
+    } else {
+
+      alert(
+        "Your browser cannot create this video."
+      );
+
+      return;
+    }
+
+
+    /*
+      RECORD VIDEO
+    */
+
+    const recorder =
+      new MediaRecorder(
+        videoStream,
+        {
+          mimeType: mimeType
+        }
+      );
+
+    const chunks = [];
+
+    recorder.ondataavailable =
+      event => {
+
+        if (
+          event.data.size > 0
+        ) {
+
+          chunks.push(
+            event.data
+          );
+        }
+      };
+
+
+    const finished =
+      new Promise(
+        resolve => {
+
+          recorder.onstop =
+            resolve;
+
+        }
+      );
+
+
+    /*
+      START RECORDING
+    */
+
+    recorder.start();
+
+    status.textContent =
+      "🎬 Creating video with voice...";
+
+
+    /*
+      PLAY AUDIO
+    */
+
+    await audio.play();
+
+
+    /*
+      CREATE SCENES
+    */
+
+    for (
+      let i = 0;
+      i < images.length;
+      i++
+    ) {
+
+      const img =
+        images[i];
 
       status.textContent =
         `🎬 Creating scene ${i + 1} of ${images.length}...`;
 
       await waitForImage(img);
+
+
+      /*
+        CLEAR CANVAS
+      */
 
       ctx.clearRect(
         0,
@@ -547,7 +744,10 @@ async function createVideoFile() {
         canvas.height
       );
 
-      /* Draw AI image */
+
+      /*
+        DRAW AI IMAGE
+      */
 
       drawImageCover(
         ctx,
@@ -555,7 +755,10 @@ async function createVideoFile() {
         canvas
       );
 
-      /* Dark overlay at bottom */
+
+      /*
+        DARK TEXT AREA
+      */
 
       const gradient =
         ctx.createLinearGradient(
@@ -575,7 +778,8 @@ async function createVideoFile() {
         "rgba(0,0,0,0.8)"
       );
 
-      ctx.fillStyle = gradient;
+      ctx.fillStyle =
+        gradient;
 
       ctx.fillRect(
         0,
@@ -584,91 +788,135 @@ async function createVideoFile() {
         350
       );
 
-      /* Scene text */
 
-      ctx.fillStyle = "white";
+      /*
+        SCENE TEXT
+      */
+
+      ctx.fillStyle =
+        "white";
 
       ctx.font =
         "bold 34px Arial";
 
-      ctx.textAlign = "center";
-
-      const text =
-        scenes[i];
+      ctx.textAlign =
+        "center";
 
       drawWrappedText(
         ctx,
-        text,
+        scenes[i],
         canvas.width / 2,
         canvas.height - 150,
         620,
         42
       );
 
-      /* Keep scene for 4 seconds */
+
+      /*
+        4 SECONDS PER IMAGE
+      */
 
       await sleep(4000);
+
     }
+
+
+    /*
+      WAIT FOR VOICE
+    */
+
+    while (
+      !audio.ended &&
+      !audio.paused
+    ) {
+
+      await sleep(200);
+
+    }
+
+
+    /*
+      STOP RECORDING
+    */
 
     recorder.stop();
 
     await finished;
 
+    audio.pause();
+
+
+    /*
+      CREATE VIDEO FILE
+    */
+
+    const videoBlob =
+      new Blob(
+        chunks,
+        {
+          type: mimeType
+        }
+      );
+
+    const videoURL =
+      URL.createObjectURL(
+        videoBlob
+      );
+
+
+    /*
+      VIDEO PREVIEW
+    */
+
+    const preview =
+      document.getElementById(
+        "videoPreview"
+      );
+
+    preview.src =
+      videoURL;
+
+    preview.style.display =
+      "block";
+
+
+    /*
+      DOWNLOAD VIDEO
+    */
+
+    const link =
+      document.createElement("a");
+
+    link.href =
+      videoURL;
+
+    link.download =
+      "my-ai-video-with-voice.webm";
+
+    document.body.appendChild(
+      link
+    );
+
+    link.click();
+
+    document.body.removeChild(
+      link
+    );
+
+    status.textContent =
+      "✅ Video with voice is ready!";
+
   } catch (error) {
 
     console.error(error);
 
-    recorder.stop();
-
     status.textContent =
-      "❌ Video creation failed.";
+      "❌ Voice/video creation failed.";
 
     alert(
-      "Something went wrong while creating the video."
+      "The voice could not be added. Please try again."
     );
-
-    return;
   }
-
-  const videoBlob =
-    new Blob(
-      chunks,
-      { type: mimeType }
-    );
-
-  const videoURL =
-    URL.createObjectURL(videoBlob);
-
-  /* Show preview */
-
-  const preview =
-    document.getElementById("videoPreview");
-
-  preview.src =
-    videoURL;
-
-  preview.style.display =
-    "block";
-
-  /* Download */
-
-  const link =
-    document.createElement("a");
-
-  link.href =
-    videoURL;
-
-  link.download =
-    "my-ai-video.webm";
-
-  document.body.appendChild(link);
-
-  link.click();
-
-  document.body.removeChild(link);
-
-  status.textContent =
-    "✅ Your video is ready and downloading!";
 }
 
 
@@ -690,20 +938,31 @@ function drawWrappedText(
 
   const lines = [];
 
-  for (let n = 0; n < words.length; n++) {
+  for (
+    let n = 0;
+    n < words.length;
+    n++
+  ) {
 
     const testLine =
-      line + words[n] + " ";
+      line +
+      words[n] +
+      " ";
 
     const metrics =
-      ctx.measureText(testLine);
+      ctx.measureText(
+        testLine
+      );
 
     if (
-      metrics.width > maxWidth &&
+      metrics.width >
+        maxWidth &&
       n > 0
     ) {
 
-      lines.push(line);
+      lines.push(
+        line
+      );
 
       line =
         words[n] + " ";
@@ -718,17 +977,22 @@ function drawWrappedText(
   lines.push(line);
 
   const startY =
-    y - ((lines.length - 1) * lineHeight) / 2;
+    y -
+    ((lines.length - 1) *
+      lineHeight) / 2;
 
-  lines.forEach((line, index) => {
+  lines.forEach(
+    (line, index) => {
 
-    ctx.fillText(
-      line,
-      x,
-      startY + index * lineHeight
-    );
+      ctx.fillText(
+        line,
+        x,
+        startY +
+        index * lineHeight
+      );
 
-  });
+    }
+  );
 }
 
 
@@ -737,9 +1001,12 @@ function drawWrappedText(
 function sleep(ms) {
 
   return new Promise(
-    resolve => setTimeout(resolve, ms)
+    resolve =>
+      setTimeout(
+        resolve,
+        ms
+      )
   );
-
 }
 
 
@@ -748,12 +1015,26 @@ function sleep(ms) {
 function escapeHTML(text) {
 
   return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 }
 
 </script>
