@@ -49,8 +49,7 @@ label {
 }
 
 textarea,
-select,
-input {
+select {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
@@ -103,13 +102,6 @@ button {
   background: #202a45;
 }
 
-.scene img {
-  width: 100%;
-  border-radius: 12px;
-  margin-top: 10px;
-  display: block;
-}
-
 .scene-number {
   font-size: 14px;
   color: #cbd5ff;
@@ -121,19 +113,22 @@ button {
   line-height: 1.5;
 }
 
+.scene img {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 12px;
+  display: block;
+}
+
 .status {
   text-align: center;
   color: #aeb7cc;
   margin-top: 15px;
 }
-
-#videoPreview {
-  width: 100%;
-  margin-top: 20px;
-  border-radius: 14px;
-  display: none;
-}
 </style>
+
+<script src="https://js.puter.com/v2/"></script>
+
 </head>
 
 <body>
@@ -143,21 +138,10 @@ button {
 <h1>🎬 AI Video Maker</h1>
 
 <p class="subtitle">
-Turn your story into an illustrated video
+Turn your story into illustrated scenes
 </p>
 
 <div class="card">
-
-<label>🔑 AI Image API Key</label>
-
-<input
-id="apiKey"
-type="password"
-placeholder="Paste your API key here">
-
-<p class="status">
-Your key is used only by this browser.
-</p>
 
 <label>📝 Your Story</label>
 
@@ -192,12 +176,10 @@ placeholder="Write your story here..."></textarea>
 </button>
 
 <p class="status" id="status">
-Your scenes will appear below.
+Write your story and create scenes.
 </p>
 
 <div id="result"></div>
-
-<video id="videoPreview" controls></video>
 
 <button class="voice" onclick="readStory()">
 🔊 Play Voice
@@ -214,7 +196,7 @@ Your scenes will appear below.
 <script>
 
 let scenes = [];
-let sceneImages = [];
+let images = [];
 
 
 /* CREATE SCENES */
@@ -241,7 +223,7 @@ function createScenes() {
     .filter(Boolean);
 
   scenes = [];
-  sceneImages = [];
+  images = [];
 
   const result =
     document.getElementById("result");
@@ -271,32 +253,20 @@ function createScenes() {
         ${escapeHTML(text)}
       </div>
 
-      <div class="scene-image-container">
-      </div>
+      <div class="image-container"></div>
     `;
 
     result.appendChild(scene);
   }
 
   document.getElementById("status").textContent =
-    "✨ Scenes created! Now generate the images.";
+    "✨ Scenes are ready!";
 }
 
 
 /* GENERATE AI IMAGES */
 
 async function generateImages() {
-
-  const apiKey =
-    document.getElementById("apiKey").value.trim();
-
-  const style =
-    document.getElementById("style").value;
-
-  if (!apiKey) {
-    alert("Please enter your AI image API key first.");
-    return;
-  }
 
   if (scenes.length === 0) {
     createScenes();
@@ -306,72 +276,62 @@ async function generateImages() {
     return;
   }
 
-  const sceneBoxes =
-    document.querySelectorAll(
-      ".scene-image-container"
-    );
+  const style =
+    document.getElementById("style").value;
 
-  sceneImages = [];
+  const containers =
+    document.querySelectorAll(".image-container");
+
+  images = [];
 
   document.getElementById("status").textContent =
-    "🖼️ Generating AI images...";
+    "🖼️ Starting AI image generation...";
 
   for (let i = 0; i < scenes.length; i++) {
 
     const prompt =
-      `${style} children's story illustration, `
-      + `beautiful colorful scene, `
-      + `friendly characters, `
-      + `cinematic composition, `
-      + `high quality, `
+      `${style} children's story illustration. `
+      + `Beautiful colorful scene. `
+      + `Friendly characters. `
+      + `High quality. `
       + `${scenes[i]}`;
 
     try {
 
-      const imageURL =
-        "https://gen.pollinations.ai/image/"
-        + encodeURIComponent(prompt)
-        + "?model=flux"
-        + "&width=720"
-        + "&height=1280"
-        + "&key="
-        + encodeURIComponent(apiKey);
+      document.getElementById("status").textContent =
+        `🖼️ Creating image ${i + 1} of ${scenes.length}...`;
+
+      const image =
+        await puter.ai.txt2img(prompt);
 
       const img =
         document.createElement("img");
 
-      img.src = imageURL;
+      if (typeof image === "string") {
+        img.src = image;
+      } else if (image && image.src) {
+        img.src = image.src;
+      } else if (image && image.url) {
+        img.src = image.url;
+      }
 
       img.alt =
-        "AI generated scene " + (i + 1);
+        "AI scene " + (i + 1);
 
-      img.onload = function() {
+      containers[i].appendChild(img);
 
-        document.getElementById("status").textContent =
-          `🖼️ Generated ${i + 1} of ${scenes.length} images`;
-
-      };
-
-      img.onerror = function() {
-
-        document.getElementById("status").textContent =
-          "❌ An image could not be generated.";
-
-      };
-
-      sceneBoxes[i].appendChild(img);
-
-      sceneImages.push(imageURL);
-
-      await wait(1500);
+      images.push(img);
 
     } catch (error) {
 
       console.error(error);
 
       alert(
-        "There was a problem generating the image."
+        "The image could not be generated. Please try again."
       );
+
+      document.getElementById("status").textContent =
+        "❌ Image generation stopped.";
 
       return;
     }
@@ -411,26 +371,26 @@ function readStory() {
 }
 
 
-/* VIDEO */
+/* VIDEO PLACEHOLDER */
 
-async function createVideoFile() {
+function createVideoFile() {
 
-  if (sceneImages.length === 0) {
+  if (images.length === 0) {
 
     alert(
-      "Please generate the AI scene images first."
+      "Generate the AI scene images first."
     );
 
     return;
   }
 
   alert(
-    "Your AI images are ready. The next version will combine them into the final video."
+    "Your AI scene images are ready. The next step is combining them into the final video."
   );
 }
 
 
-/* ESCAPE TEXT */
+/* ESCAPE HTML */
 
 function escapeHTML(text) {
 
@@ -440,17 +400,6 @@ function escapeHTML(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-
-/* WAIT */
-
-function wait(ms) {
-
-  return new Promise(
-    resolve =>
-      setTimeout(resolve, ms)
-  );
 }
 
 </script>
