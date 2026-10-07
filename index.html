@@ -125,6 +125,14 @@ button {
   color: #aeb7cc;
   margin-top: 15px;
 }
+
+#videoPreview {
+  width: 100%;
+  margin-top: 20px;
+  border-radius: 15px;
+  display: none;
+}
+
 </style>
 
 <script src="https://js.puter.com/v2/"></script>
@@ -138,7 +146,7 @@ button {
 <h1>🎬 AI Video Maker</h1>
 
 <p class="subtitle">
-Turn your story into illustrated scenes
+Turn your story into an illustrated video
 </p>
 
 <div class="card">
@@ -188,6 +196,8 @@ Write your story and create scenes.
 <button class="download" onclick="createVideoFile()">
 🎬 Create & Download Video
 </button>
+
+<video id="videoPreview" controls></video>
 
 </div>
 
@@ -315,8 +325,7 @@ async function generateImages() {
         img.src = image.url;
       }
 
-      img.alt =
-        "AI scene " + (i + 1);
+      img.alt = "AI scene " + (i + 1);
 
       containers[i].appendChild(img);
 
@@ -342,7 +351,7 @@ async function generateImages() {
 }
 
 
-/* VOICE */
+/* PLAY VOICE */
 
 function readStory() {
 
@@ -371,22 +380,366 @@ function readStory() {
 }
 
 
-/* VIDEO PLACEHOLDER */
+/* WAIT FOR IMAGE */
 
-function createVideoFile() {
+function waitForImage(img) {
+
+  return new Promise((resolve, reject) => {
+
+    if (img.complete && img.naturalWidth > 0) {
+      resolve();
+      return;
+    }
+
+    img.onload = () => resolve();
+
+    img.onerror = () =>
+      reject(new Error("Image failed to load."));
+  });
+}
+
+
+/* DRAW IMAGE TO CANVAS */
+
+function drawImageCover(ctx, img, canvas) {
+
+  const canvasWidth = canvas.width;
+  const canvasHeight = canvas.height;
+
+  const imageWidth = img.naturalWidth;
+  const imageHeight = img.naturalHeight;
+
+  const scale = Math.max(
+    canvasWidth / imageWidth,
+    canvasHeight / imageHeight
+  );
+
+  const width = imageWidth * scale;
+  const height = imageHeight * scale;
+
+  const x = (canvasWidth - width) / 2;
+  const y = (canvasHeight - height) / 2;
+
+  ctx.drawImage(
+    img,
+    x,
+    y,
+    width,
+    height
+  );
+}
+
+
+/* CREATE VIDEO */
+
+async function createVideoFile() {
 
   if (images.length === 0) {
 
     alert(
-      "Generate the AI scene images first."
+      "First generate the AI scene images."
     );
 
     return;
   }
 
-  alert(
-    "Your AI scene images are ready. The next step is combining them into the final video."
+  if (!HTMLCanvasElement.prototype.captureStream) {
+
+    alert(
+      "Your browser does not support video recording. Please use Chrome."
+    );
+
+    return;
+  }
+
+  const status =
+    document.getElementById("status");
+
+  status.textContent =
+    "🎬 Preparing your video...";
+
+  const canvas =
+    document.createElement("canvas");
+
+  canvas.width = 720;
+  canvas.height = 1280;
+
+  const ctx =
+    canvas.getContext("2d");
+
+  let stream;
+
+  try {
+
+    stream =
+      canvas.captureStream(30);
+
+  } catch (error) {
+
+    alert(
+      "Your browser could not start video recording."
+    );
+
+    return;
+  }
+
+  let mimeType = "";
+
+  if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
+
+    mimeType =
+      "video/webm;codecs=vp9";
+
+  } else if (MediaRecorder.isTypeSupported("video/webm")) {
+
+    mimeType =
+      "video/webm";
+
+  } else {
+
+    alert(
+      "This browser cannot create a downloadable video."
+    );
+
+    return;
+  }
+
+  const recorder =
+    new MediaRecorder(
+      stream,
+      { mimeType: mimeType }
+    );
+
+  const chunks = [];
+
+  recorder.ondataavailable = event => {
+
+    if (event.data.size > 0) {
+      chunks.push(event.data);
+    }
+
+  };
+
+  const finished =
+    new Promise(resolve => {
+
+      recorder.onstop = resolve;
+
+    });
+
+  recorder.start();
+
+  try {
+
+    for (let i = 0; i < images.length; i++) {
+
+      const img = images[i];
+
+      status.textContent =
+        `🎬 Creating scene ${i + 1} of ${images.length}...`;
+
+      await waitForImage(img);
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      /* Draw AI image */
+
+      drawImageCover(
+        ctx,
+        img,
+        canvas
+      );
+
+      /* Dark overlay at bottom */
+
+      const gradient =
+        ctx.createLinearGradient(
+          0,
+          canvas.height - 350,
+          0,
+          canvas.height
+        );
+
+      gradient.addColorStop(
+        0,
+        "rgba(0,0,0,0)"
+      );
+
+      gradient.addColorStop(
+        1,
+        "rgba(0,0,0,0.8)"
+      );
+
+      ctx.fillStyle = gradient;
+
+      ctx.fillRect(
+        0,
+        canvas.height - 350,
+        canvas.width,
+        350
+      );
+
+      /* Scene text */
+
+      ctx.fillStyle = "white";
+
+      ctx.font =
+        "bold 34px Arial";
+
+      ctx.textAlign = "center";
+
+      const text =
+        scenes[i];
+
+      drawWrappedText(
+        ctx,
+        text,
+        canvas.width / 2,
+        canvas.height - 150,
+        620,
+        42
+      );
+
+      /* Keep scene for 4 seconds */
+
+      await sleep(4000);
+    }
+
+    recorder.stop();
+
+    await finished;
+
+  } catch (error) {
+
+    console.error(error);
+
+    recorder.stop();
+
+    status.textContent =
+      "❌ Video creation failed.";
+
+    alert(
+      "Something went wrong while creating the video."
+    );
+
+    return;
+  }
+
+  const videoBlob =
+    new Blob(
+      chunks,
+      { type: mimeType }
+    );
+
+  const videoURL =
+    URL.createObjectURL(videoBlob);
+
+  /* Show preview */
+
+  const preview =
+    document.getElementById("videoPreview");
+
+  preview.src =
+    videoURL;
+
+  preview.style.display =
+    "block";
+
+  /* Download */
+
+  const link =
+    document.createElement("a");
+
+  link.href =
+    videoURL;
+
+  link.download =
+    "my-ai-video.webm";
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  document.body.removeChild(link);
+
+  status.textContent =
+    "✅ Your video is ready and downloading!";
+}
+
+
+/* WRAP TEXT */
+
+function drawWrappedText(
+  ctx,
+  text,
+  x,
+  y,
+  maxWidth,
+  lineHeight
+) {
+
+  const words =
+    text.split(" ");
+
+  let line = "";
+
+  const lines = [];
+
+  for (let n = 0; n < words.length; n++) {
+
+    const testLine =
+      line + words[n] + " ";
+
+    const metrics =
+      ctx.measureText(testLine);
+
+    if (
+      metrics.width > maxWidth &&
+      n > 0
+    ) {
+
+      lines.push(line);
+
+      line =
+        words[n] + " ";
+
+    } else {
+
+      line =
+        testLine;
+    }
+  }
+
+  lines.push(line);
+
+  const startY =
+    y - ((lines.length - 1) * lineHeight) / 2;
+
+  lines.forEach((line, index) => {
+
+    ctx.fillText(
+      line,
+      x,
+      startY + index * lineHeight
+    );
+
+  });
+}
+
+
+/* DELAY */
+
+function sleep(ms) {
+
+  return new Promise(
+    resolve => setTimeout(resolve, ms)
   );
+
 }
 
 
@@ -400,6 +753,7 @@ function escapeHTML(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
 }
 
 </script>
