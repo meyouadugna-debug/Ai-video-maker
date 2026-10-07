@@ -49,7 +49,8 @@ label {
 }
 
 textarea,
-select {
+select,
+input {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
@@ -80,6 +81,11 @@ button {
   color: white;
 }
 
+.imageButton {
+  background: #db2777;
+  color: white;
+}
+
 .voice {
   background: #2563eb;
   color: white;
@@ -91,10 +97,17 @@ button {
 }
 
 .scene {
-  padding: 18px;
-  margin-top: 12px;
+  padding: 15px;
+  margin-top: 15px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #263b73, #542d64);
+  background: #202a45;
+}
+
+.scene img {
+  width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+  display: block;
 }
 
 .scene-number {
@@ -119,7 +132,6 @@ button {
   margin-top: 20px;
   border-radius: 14px;
   display: none;
-  background: black;
 }
 </style>
 </head>
@@ -131,10 +143,21 @@ button {
 <h1>🎬 AI Video Maker</h1>
 
 <p class="subtitle">
-Turn your story into a video
+Turn your story into an illustrated video
 </p>
 
 <div class="card">
+
+<label>🔑 AI Image API Key</label>
+
+<input
+id="apiKey"
+type="password"
+placeholder="Paste your API key here">
+
+<p class="status">
+Your key is used only by this browser.
+</p>
 
 <label>📝 Your Story</label>
 
@@ -164,23 +187,17 @@ placeholder="Write your story here..."></textarea>
 ✨ Create Scenes
 </button>
 
+<button class="imageButton" onclick="generateImages()">
+🖼️ Generate AI Scene Images
+</button>
+
 <p class="status" id="status">
 Your scenes will appear below.
 </p>
 
 <div id="result"></div>
 
-<canvas
-id="videoCanvas"
-width="720"
-height="1280"
-style="display:none;">
-</canvas>
-
-<video
-id="videoPreview"
-controls>
-</video>
+<video id="videoPreview" controls></video>
 
 <button class="voice" onclick="readStory()">
 🔊 Play Voice
@@ -197,6 +214,7 @@ controls>
 <script>
 
 let scenes = [];
+let sceneImages = [];
 
 
 /* CREATE SCENES */
@@ -223,6 +241,7 @@ function createScenes() {
     .filter(Boolean);
 
   scenes = [];
+  sceneImages = [];
 
   const result =
     document.getElementById("result");
@@ -251,26 +270,115 @@ function createScenes() {
       <div class="scene-text">
         ${escapeHTML(text)}
       </div>
+
+      <div class="scene-image-container">
+      </div>
     `;
 
     result.appendChild(scene);
   }
 
   document.getElementById("status").textContent =
-    "✨ Your scenes are ready!";
+    "✨ Scenes created! Now generate the images.";
 }
 
 
-/* SAFE TEXT */
+/* GENERATE AI IMAGES */
 
-function escapeHTML(text) {
+async function generateImages() {
 
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  const apiKey =
+    document.getElementById("apiKey").value.trim();
+
+  const style =
+    document.getElementById("style").value;
+
+  if (!apiKey) {
+    alert("Please enter your AI image API key first.");
+    return;
+  }
+
+  if (scenes.length === 0) {
+    createScenes();
+  }
+
+  if (scenes.length === 0) {
+    return;
+  }
+
+  const sceneBoxes =
+    document.querySelectorAll(
+      ".scene-image-container"
+    );
+
+  sceneImages = [];
+
+  document.getElementById("status").textContent =
+    "🖼️ Generating AI images...";
+
+  for (let i = 0; i < scenes.length; i++) {
+
+    const prompt =
+      `${style} children's story illustration, `
+      + `beautiful colorful scene, `
+      + `friendly characters, `
+      + `cinematic composition, `
+      + `high quality, `
+      + `${scenes[i]}`;
+
+    try {
+
+      const imageURL =
+        "https://gen.pollinations.ai/image/"
+        + encodeURIComponent(prompt)
+        + "?model=flux"
+        + "&width=720"
+        + "&height=1280"
+        + "&key="
+        + encodeURIComponent(apiKey);
+
+      const img =
+        document.createElement("img");
+
+      img.src = imageURL;
+
+      img.alt =
+        "AI generated scene " + (i + 1);
+
+      img.onload = function() {
+
+        document.getElementById("status").textContent =
+          `🖼️ Generated ${i + 1} of ${scenes.length} images`;
+
+      };
+
+      img.onerror = function() {
+
+        document.getElementById("status").textContent =
+          "❌ An image could not be generated.";
+
+      };
+
+      sceneBoxes[i].appendChild(img);
+
+      sceneImages.push(imageURL);
+
+      await wait(1500);
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "There was a problem generating the image."
+      );
+
+      return;
+    }
+  }
+
+  document.getElementById("status").textContent =
+    "✅ All scene images are ready!";
 }
 
 
@@ -303,277 +411,35 @@ function readStory() {
 }
 
 
-/* CREATE VIDEO */
+/* VIDEO */
 
 async function createVideoFile() {
 
-  if (scenes.length === 0) {
-
-    createScenes();
-
-    if (scenes.length === 0) {
-      return;
-    }
-  }
-
-  if (!window.MediaRecorder) {
+  if (sceneImages.length === 0) {
 
     alert(
-      "Your browser does not support video recording. Please try Chrome."
+      "Please generate the AI scene images first."
     );
 
     return;
   }
 
-  const canvas =
-    document.getElementById("videoCanvas");
-
-  const ctx =
-    canvas.getContext("2d");
-
-  const stream =
-    canvas.captureStream(30);
-
-  let mimeType = "";
-
-  if (
-    MediaRecorder.isTypeSupported(
-      "video/webm;codecs=vp9"
-    )
-  ) {
-    mimeType =
-      "video/webm;codecs=vp9";
-  }
-
-  else if (
-    MediaRecorder.isTypeSupported(
-      "video/webm;codecs=vp8"
-    )
-  ) {
-    mimeType =
-      "video/webm;codecs=vp8";
-  }
-
-  else {
-    mimeType = "video/webm";
-  }
-
-  const recorder =
-    new MediaRecorder(
-      stream,
-      { mimeType: mimeType }
-    );
-
-  const chunks = [];
-
-  recorder.ondataavailable = function(event) {
-
-    if (event.data.size > 0) {
-      chunks.push(event.data);
-    }
-
-  };
-
-  recorder.onstop = function() {
-
-    const blob =
-      new Blob(
-        chunks,
-        { type: mimeType }
-      );
-
-    const url =
-      URL.createObjectURL(blob);
-
-    const video =
-      document.getElementById("videoPreview");
-
-    video.src = url;
-
-    video.style.display = "block";
-
-    const link =
-      document.createElement("a");
-
-    link.href = url;
-
-    link.download =
-      "my-ai-video.webm";
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-    document.getElementById("status").textContent =
-      "✅ Your video is ready!";
-
-  };
-
-  recorder.start();
-
-  document.getElementById("status").textContent =
-    "🎬 Creating video...";
-
-  for (let i = 0; i < scenes.length; i++) {
-
-    drawScene(
-      ctx,
-      scenes[i],
-      i + 1,
-      scenes.length
-    );
-
-    await wait(3000);
-  }
-
-  recorder.stop();
+  alert(
+    "Your AI images are ready. The next version will combine them into the final video."
+  );
 }
 
 
-/* DRAW SCENE */
+/* ESCAPE TEXT */
 
-function drawScene(
-  ctx,
-  text,
-  number,
-  total
-) {
+function escapeHTML(text) {
 
-  const width = 720;
-  const height = 1280;
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-  const gradient =
-    ctx.createLinearGradient(
-      0,
-      0,
-      width,
-      height
-    );
-
-  gradient.addColorStop(
-    0,
-    "#263b73"
-  );
-
-  gradient.addColorStop(
-    1,
-    "#542d64"
-  );
-
-  ctx.fillStyle = gradient;
-
-  ctx.fillRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-  ctx.fillStyle = "white";
-
-  ctx.font =
-    "bold 42px Arial";
-
-  ctx.textAlign =
-    "center";
-
-  ctx.fillText(
-    "AI VIDEO MAKER",
-    width / 2,
-    100
-  );
-
-  ctx.font =
-    "bold 30px Arial";
-
-  ctx.fillText(
-    "Scene " + number + " / " + total,
-    width / 2,
-    180
-  );
-
-  ctx.font =
-    "32px Arial";
-
-  const lines =
-    wrapText(
-      ctx,
-      text,
-      580
-    );
-
-  let y = 500;
-
-  for (const line of lines) {
-
-    ctx.fillText(
-      line,
-      width / 2,
-      y
-    );
-
-    y += 50;
-  }
-
-}
-
-
-/* WRAP TEXT */
-
-function wrapText(
-  ctx,
-  text,
-  maxWidth
-) {
-
-  const words =
-    text.split(" ");
-
-  const lines = [];
-
-  let line = "";
-
-  for (const word of words) {
-
-    const test =
-      line
-      ? line + " " + word
-      : word;
-
-    const measurement =
-      ctx.measureText(test);
-
-    if (
-      measurement.width >
-      maxWidth
-    ) {
-
-      lines.push(line);
-
-      line = word;
-
-    } else {
-
-      line = test;
-
-    }
-
-  }
-
-  if (line) {
-    lines.push(line);
-  }
-
-  return lines;
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 
@@ -585,7 +451,6 @@ function wait(ms) {
     resolve =>
       setTimeout(resolve, ms)
   );
-
 }
 
 </script>
