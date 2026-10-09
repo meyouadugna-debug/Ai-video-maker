@@ -1,62 +1,51 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>AI Video Maker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My AI Video Maker</title>
 
 <style>
-
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
   background: #0b1020;
   color: white;
+  font-family: Arial, sans-serif;
 }
 
 .container {
   max-width: 700px;
   margin: auto;
-  padding: 20px;
+  padding: 18px;
 }
 
-h1 {
-  text-align: center;
-  font-size: 32px;
-}
+h1 { text-align: center; }
 
 .subtitle {
   text-align: center;
-  color: #aeb7cc;
+  color: #b8c2dc;
 }
 
 .card {
   background: #151c30;
-  padding: 20px;
-  border-radius: 18px;
+  padding: 18px;
   margin-top: 20px;
+  border-radius: 18px;
 }
 
 label {
   display: block;
-  margin-top: 15px;
-  margin-bottom: 8px;
+  margin: 16px 0 8px;
   font-weight: bold;
 }
 
-textarea,
-select {
+textarea, select {
   width: 100%;
-  padding: 14px;
-  border-radius: 12px;
+  padding: 13px;
+  border-radius: 10px;
   border: 1px solid #39435e;
   background: #0d1324;
   color: white;
@@ -64,1323 +53,628 @@ select {
 }
 
 textarea {
-  height: 180px;
+  min-height: 170px;
   resize: vertical;
 }
 
 button {
   width: 100%;
   padding: 15px;
-  margin-top: 15px;
-  border: none;
-  border-radius: 12px;
-  font-size: 17px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 11px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
 }
 
-.create {
-  background: #7c3aed;
-  color: white;
-}
+.create { background: #7c3aed; color: white; }
+.imageButton { background: #db2777; color: white; }
+.voice { background: #2563eb; color: white; }
+.download { background: #16a34a; color: white; }
 
-.imageButton {
-  background: #db2777;
-  color: white;
-}
-
-.voice {
-  background: #2563eb;
-  color: white;
-}
-
-.download {
-  background: #16a34a;
-  color: white;
+button:disabled {
+  opacity: .6;
+  cursor: wait;
 }
 
 .scene {
-  padding: 15px;
+  padding: 14px;
   margin-top: 15px;
-  border-radius: 14px;
   background: #202a45;
+  border-radius: 13px;
 }
 
 .scene-number {
-  font-size: 14px;
   color: #cbd5ff;
+  font-size: 14px;
 }
 
 .scene-text {
-  margin-top: 8px;
-  font-size: 17px;
+  margin-top: 9px;
   line-height: 1.5;
 }
 
 .scene img {
+  display: block;
   width: 100%;
   margin-top: 12px;
-  border-radius: 12px;
-  display: block;
+  border-radius: 10px;
 }
 
 .status {
   text-align: center;
+  color: #cbd5ff;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.note {
   color: #aeb7cc;
-  margin-top: 15px;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 #videoPreview {
-  width: 100%;
-  margin-top: 20px;
-  border-radius: 15px;
   display: none;
+  width: 100%;
+  margin-top: 18px;
+  border-radius: 12px;
 }
-
 </style>
 
 <script src="https://js.puter.com/v2/"></script>
-
 </head>
 
-
 <body>
-
 <div class="container">
+  <h1>🎬 My AI Video Maker</h1>
+  <p class="subtitle">Turn your story into an illustrated video</p>
 
-<h1>🎬 AI Video Maker</h1>
+  <div class="card">
+    <label for="story">📝 Your Story</label>
+    <textarea id="story"
+      placeholder="Write your story here..."></textarea>
 
-<p class="subtitle">
-Turn your story into an illustrated video
-</p>
+    <label for="style">🎨 Image Style</label>
+    <select id="style">
+      <option>Colorful cartoon</option>
+      <option>Fantasy</option>
+      <option>Adventure</option>
+      <option>Children's storybook</option>
+      <option>Realistic</option>
+    </select>
 
+    <label for="sceneCount">🎬 Number of Scenes</label>
+    <select id="sceneCount">
+      <option value="3">3 scenes</option>
+      <option value="5">5 scenes</option>
+      <option value="8">8 scenes</option>
+    </select>
 
-<div class="card">
+    <button class="create" id="sceneBtn"
+      onclick="createScenes()">✨ Create Scenes</button>
 
+    <button class="imageButton" id="imageBtn"
+      onclick="generateImages()">🖼️ Generate AI Images</button>
 
-<label>📝 Your Story</label>
+    <p class="note">
+      Images use AI Horde, a community-powered service.
+      Free generation may be slow or temporarily unavailable.
+    </p>
 
-<textarea
-id="story"
-placeholder="Write your story here..."
-></textarea>
+    <p class="status" id="status">
+      Write a story and create your scenes.
+    </p>
 
+    <div id="result"></div>
 
-<label>🎨 Video Style</label>
+    <button class="voice" id="voiceBtn"
+      onclick="readStory()">🔊 Play Story Voice</button>
 
-<select id="style">
+    <button class="download" id="videoBtn"
+      onclick="createVideoFile()">🎥 Create & Download Video</button>
 
-<option>Cartoon</option>
-
-<option>Fantasy</option>
-
-<option>Adventure</option>
-
-<option>Kids Story</option>
-
-<option>Realistic</option>
-
-</select>
-
-
-<label>🎬 Number of Scenes</label>
-
-<select id="sceneCount">
-
-<option value="3">
-3 scenes
-</option>
-
-<option value="5" selected>
-5 scenes
-</option>
-
-<option value="8">
-8 scenes
-</option>
-
-</select>
-
-
-<button
-class="create"
-onclick="createScenes()">
-
-✨ Create Scenes
-
-</button>
-
-
-<button
-class="imageButton"
-onclick="generateImages()">
-
-🖼️ Generate AI Scene Images
-
-</button>
-
-
-<p
-class="status"
-id="status">
-
-Write your story and create scenes.
-
-</p>
-
-
-<div id="result"></div>
-
-
-<button
-class="voice"
-onclick="readStory()">
-
-🔊 Play Voice
-
-</button>
-
-
-<button
-class="download"
-onclick="createVideoFile()">
-
-🎬 Create & Download Video
-
-</button>
-
-
-<video
-id="videoPreview"
-controls>
-</video>
-
-
+    <video id="videoPreview" controls playsinline></video>
+  </div>
 </div>
-
-</div>
-
-
 
 <script>
-
-
-/* =========================
-   VARIABLES
-========================= */
-
 let scenes = [];
-
 let images = [];
+let isGenerating = false;
 
+const HORDE = "https://aihorde.net/api/v2";
+const HORDE_KEY = "0000000000";
+const CLIENT_AGENT =
+  "AI-Video-Maker:1.0:github.com/meyouadugna-debug/Ai-video-maker";
 
+function setStatus(message) {
+  document.getElementById("status").textContent = message;
+}
 
-/* =========================
-   CREATE SCENES
-========================= */
+function escapeHTML(value) {
+  return value.replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 function createScenes() {
+  if (isGenerating) return;
 
-  const story =
-    document
-      .getElementById("story")
-      .value
-      .trim();
-
-
-  const style =
-    document
-      .getElementById("style")
-      .value;
-
-
-  const count =
-    Number(
-      document
-        .getElementById("sceneCount")
-        .value
-    );
-
+  const story = document.getElementById("story").value.trim();
+  const count = Number(document.getElementById("sceneCount").value);
+  const style = document.getElementById("style").value;
 
   if (!story) {
-
-    alert(
-      "Please write your story first."
-    );
-
+    alert("Please write your story first.");
     return;
   }
 
+  // Split story into sentences.
+  const sentences = story.match(/[^.!?]+[.!?]?/g)
+    ?.map(s => s.trim())
+    .filter(Boolean) || [];
 
-  const sentences =
-    story
-      .split(/[.!?]+/)
-      .map(
-        s => s.trim()
-      )
-      .filter(Boolean);
+  if (!sentences.length) {
+    alert("Please write a longer story.");
+    return;
+  }
 
+  // Distribute sentences across the selected scenes.
+  scenes = Array.from({ length: count }, (_, i) => {
+    const start = Math.floor(i * sentences.length / count);
+    const end = Math.floor((i + 1) * sentences.length / count);
 
-  scenes = [];
+    if (start === end) {
+      return sentences[Math.min(start, sentences.length - 1)];
+    }
+
+    return sentences.slice(start, end).join(" ");
+  });
 
   images = [];
 
-
-  const result =
-    document
-      .getElementById("result");
-
-
+  const result = document.getElementById("result");
   result.innerHTML = "";
 
-
-  for (
-    let i = 0;
-    i < count;
-    i++
-  ) {
-
-
-    const text =
-      sentences.length > 0
-      ? sentences[
-          i % sentences.length
-        ]
-      : story;
-
-
-    scenes.push(text);
-
-
-    const scene =
-      document
-        .createElement("div");
-
-
-    scene.className =
-      "scene";
-
-
+  scenes.forEach((text, i) => {
+    const scene = document.createElement("div");
+    scene.className = "scene";
     scene.innerHTML = `
-
       <div class="scene-number">
-
-        🎬 Scene ${i + 1}
-        • ${escapeHTML(style)}
-
+        🎬 Scene ${i + 1} · ${escapeHTML(style)}
       </div>
-
-
-      <div class="scene-text">
-
-        ${escapeHTML(text)}
-
-      </div>
-
-
-      <div
-        class="image-container">
-      </div>
-
+      <div class="scene-text">${escapeHTML(text)}</div>
+      <div class="image-container"></div>
     `;
-
-
     result.appendChild(scene);
+  });
 
-  }
-
-
-  document
-    .getElementById("status")
-    .textContent =
-      "✨ Scenes are ready!";
-
+  document.getElementById("videoPreview").style.display = "none";
+  setStatus("✅ Scenes are ready. Generate your AI images next.");
 }
 
-
-
-/* =========================
-   GENERATE AI IMAGES
-========================= */
-
-async function generateImages() {
-
-
-  if (scenes.length === 0) {
-
-    createScenes();
-
-  }
-
-
-  if (scenes.length === 0) {
-
-    return;
-
-  }
-
-
-  const style =
-    document
-      .getElementById("style")
-      .value;
-
-
-  const containers =
-    document
-      .querySelectorAll(
-        ".image-container"
-      );
-
-
-  images = [];
-
-
-  document
-    .getElementById("status")
-    .textContent =
-      "🖼️ Starting AI image generation...";
-
-
-  for (
-    let i = 0;
-    i < scenes.length;
-    i++
-  ) {
-
-
-    const prompt =
-
-      `${style} children's story illustration. ` +
-
-      `Beautiful colorful scene. ` +
-
-      `Friendly characters. ` +
-
-      `High quality. ` +
-
-      `${scenes[i]}`;
-
-
-    try {
-
-
-      document
-        .getElementById("status")
-        .textContent =
-
-          `🖼️ Creating image ${
-            i + 1
-          } of ${
-            scenes.length
-          }...`;
-
-
-      const image =
-        await puter.ai.txt2img(
-          prompt
-        );
-
-
-      const img =
-        document
-          .createElement("img");
-
-
-      if (
-        typeof image === "string"
-      ) {
-
-        img.src = image;
-
-      }
-
-      else if (
-        image &&
-        image.src
-      ) {
-
-        img.src =
-          image.src;
-
-      }
-
-      else if (
-        image &&
-        image.url
-      ) {
-
-        img.src =
-          image.url;
-
-      }
-
-
-      img.alt =
-        "AI scene " +
-        (i + 1);
-
-
-      containers[i]
-        .appendChild(img);
-
-
-      images.push(img);
-
+async function hordeRequest(path, options = {}) {
+  const response = await fetch(HORDE + path, {
+    ...options,
+    headers: {
+      "apikey": HORDE_KEY,
+      "Client-Agent": CLIENT_AGENT,
+      ...(options.headers || {})
     }
+  });
 
-
-    catch (error) {
-
-      console.error(error);
-
-
-      alert(
-        "The image could not be generated. Please try again."
-      );
-
-
-      document
-        .getElementById("status")
-        .textContent =
-          "❌ Image generation stopped.";
-
-
-      return;
-
-    }
-
-  }
-
-
-  document
-    .getElementById("status")
-    .textContent =
-      "✅ All scene images are ready!";
-
-}
-
-
-
-/* =========================
-   PLAY FULL STORY VOICE
-========================= */
-
-async function readStory() {
-
-
-  const story =
-    document
-      .getElementById("story")
-      .value
-      .trim();
-
-
-  if (!story) {
-
-    alert(
-      "Please write your story first."
-    );
-
-    return;
-
-  }
-
+  const text = await response.text();
+  let data;
 
   try {
-
-
-    const audio =
-      await puter.ai.txt2speech(
-        story
-      );
-
-
-    if (!audio) {
-
-      throw new Error(
-        "Voice was not created."
-      );
-
-    }
-
-
-    await audio.play();
-
-
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("The image service returned an unreadable response.");
   }
 
-
-  catch (error) {
-
-    console.error(error);
-
-
-    alert(
-      "The voice could not be played."
+  if (!response.ok) {
+    throw new Error(
+      data.message || data.error || `Service error ${response.status}`
     );
-
   }
 
+  return data;
 }
 
+async function generateImages() {
+  if (isGenerating) return;
 
+  if (scenes.length === 0) {
+    createScenes();
+  }
 
-/* =========================
-   WAIT FOR IMAGE
-========================= */
+  if (scenes.length === 0) return;
 
-function waitForImage(img) {
+  isGenerating = true;
+  document.getElementById("imageBtn").disabled = true;
+  document.getElementById("sceneBtn").disabled = true;
+  images = [];
 
-  return new Promise(
-    (resolve, reject) => {
+  const containers =
+    document.querySelectorAll(".image-container");
 
+  containers.forEach(container => container.innerHTML = "");
 
-      if (
-        img.complete &&
-        img.naturalWidth > 0
-      ) {
+  try {
+    for (let i = 0; i < scenes.length; i++) {
+      setStatus(
+        `🎨 Requesting image ${i + 1} of ${scenes.length}...`
+      );
 
-        resolve();
+      const style = document.getElementById("style").value;
 
-        return;
+      const prompt =
+        `${style}, child-friendly story illustration, beautiful colors, ` +
+        `clear composition, expressive friendly characters, detailed scenery. ` +
+        `Illustrate this scene: ${scenes[i]}`;
 
+      const job = await hordeRequest("/generate/async", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: prompt,
+          params: {
+            width: 512,
+            height: 512,
+            steps: 20,
+            n: 1
+          },
+          nsfw: false,
+          censor_nsfw: true,
+          r2: true,
+          shared: true
+        })
+      });
+
+      if (!job.id) {
+        throw new Error(job.message || "The service did not create a job.");
       }
 
+      let completed = false;
+      let attempts = 0;
 
-      img.onload =
-        () => resolve();
+      // Wait for a community worker to generate the picture.
+      while (attempts < 180) {
+        attempts++;
+        await sleep(4000);
 
+        setStatus(
+          `⏳ Waiting for image ${i + 1} of ${scenes.length} ` +
+          `(check ${attempts})...`
+        );
 
-      img.onerror =
-        () =>
-          reject(
-            new Error(
-              "Image failed to load."
-            )
-          );
+        const check = await hordeRequest(
+          "/generate/check/" + encodeURIComponent(job.id)
+        );
 
+        if (check.faulted) {
+          throw new Error("The image job failed on the service.");
+        }
+
+        if (check.done) {
+          completed = true;
+          break;
+        }
+      }
+
+      if (!completed) {
+        throw new Error(
+          "The free image queue took too long. Try again later."
+        );
+      }
+
+      const generated = await hordeRequest(
+        "/generate/status/" + encodeURIComponent(job.id)
+      );
+
+      const imageURL = generated.generations?.[0]?.img;
+
+      if (!imageURL) {
+        throw new Error("The service finished without returning an image.");
+      }
+
+      setStatus(`🖼️ Loading image ${i + 1} of ${scenes.length}...`);
+
+      // Download as a local blob so the video can use the picture.
+      const imageResponse = await fetch(imageURL);
+
+      if (!imageResponse.ok) {
+        throw new Error(
+          "The generated image could not be downloaded."
+        );
+      }
+
+      const blob = await imageResponse.blob();
+      const localURL = URL.createObjectURL(blob);
+
+      const img = new Image();
+      img.alt = "AI scene " + (i + 1);
+      img.src = localURL;
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(
+          new Error("The generated image could not be displayed.")
+        );
+      });
+
+      containers[i].appendChild(img);
+      images.push(img);
     }
-  );
 
-}
+    setStatus("✅ All scene images are ready. Create your video now.");
 
-
-
-/* =========================
-   DRAW IMAGE
-========================= */
-
-function drawImageCover(
-  ctx,
-  img,
-  canvas
-) {
-
-
-  const canvasWidth =
-    canvas.width;
-
-
-  const canvasHeight =
-    canvas.height;
-
-
-  const imageWidth =
-    img.naturalWidth;
-
-
-  const imageHeight =
-    img.naturalHeight;
-
-
-  const scale =
-    Math.max(
-      canvasWidth /
-        imageWidth,
-
-      canvasHeight /
-        imageHeight
+  } catch (error) {
+    console.error(error);
+    setStatus("❌ Image generation did not finish.");
+    alert(
+      "AI image generation failed: " + error.message +
+      "\n\nThe service may be busy, or your browser may block the request."
     );
 
+  } finally {
+    isGenerating = false;
+    document.getElementById("imageBtn").disabled = false;
+    document.getElementById("sceneBtn").disabled = false;
+  }
+}
 
-  const width =
-    imageWidth *
-    scale;
+async function readStory() {
+  const story = document.getElementById("story").value.trim();
 
+  if (!story) {
+    alert("Please write your story first.");
+    return;
+  }
 
-  const height =
-    imageHeight *
-    scale;
+  try {
+    setStatus("🔊 Creating your story voice...");
+    const audio = await puter.ai.txt2speech(story);
 
+    if (!audio) throw new Error("No voice was returned.");
 
-  const x =
-    (
-      canvasWidth -
-      width
-    ) / 2;
+    await audio.play();
+    setStatus("🔊 Playing your story voice.");
 
+  } catch (error) {
+    console.error(error);
+    alert(
+      "The voice could not be played. Please try again."
+    );
+    setStatus("Voice playback failed.");
+  }
+}
 
-  const y =
-    (
-      canvasHeight -
-      height
-    ) / 2;
+function waitForImage(img) {
+  return new Promise((resolve, reject) => {
+    if (img.complete && img.naturalWidth > 0) {
+      resolve();
+      return;
+    }
 
+    img.onload = resolve;
+    img.onerror = () => reject(new Error("An image failed to load."));
+  });
+}
+
+function drawImageCover(ctx, img, canvas) {
+  const scale = Math.max(
+    canvas.width / img.naturalWidth,
+    canvas.height / img.naturalHeight
+  );
+
+  const width = img.naturalWidth * scale;
+  const height = img.naturalHeight * scale;
 
   ctx.drawImage(
     img,
-    x,
-    y,
+    (canvas.width - width) / 2,
+    (canvas.height - height) / 2,
     width,
     height
   );
-
 }
 
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(/\s+/);
+  const lines = [];
+  let line = "";
 
+  for (const word of words) {
+    const test = line ? line + " " + word : word;
 
-/* =========================
-   CREATE VIDEO
-   SCENE BY SCENE VOICE
-========================= */
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+
+  if (line) lines.push(line);
+
+  const startY = y - ((lines.length - 1) * lineHeight) / 2;
+
+  lines.forEach((lineText, i) => {
+    ctx.fillText(lineText, x, startY + i * lineHeight);
+  });
+}
 
 async function createVideoFile() {
-
-
-  if (
-    images.length === 0
-  ) {
-
-    alert(
-      "First generate the AI scene images."
-    );
-
+  if (isGenerating) {
+    alert("Please wait until image generation finishes.");
     return;
-
   }
 
-
-  if (
-    !HTMLCanvasElement
-      .prototype
-      .captureStream
-  ) {
-
-    alert(
-      "Please use Chrome for video recording."
-    );
-
+  if (images.length !== scenes.length || images.length === 0) {
+    alert("First generate all the AI scene images.");
     return;
-
   }
 
+  if (!HTMLCanvasElement.prototype.captureStream ||
+      !window.MediaRecorder) {
+    alert("Please try the latest version of Chrome.");
+    return;
+  }
 
-  const status =
-    document
-      .getElementById("status");
+  const button = document.getElementById("videoBtn");
+  button.disabled = true;
 
+  let audioContext;
 
   try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 720;
+    canvas.height = 1280;
 
+    const ctx = canvas.getContext("2d");
+    const stream = canvas.captureStream(30);
 
-    /* CANVAS */
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
 
-    const canvas =
-      document
-        .createElement("canvas");
+    audioContext = new AudioContextClass();
 
+    const audioDestination =
+      audioContext.createMediaStreamDestination();
 
-    canvas.width =
-      720;
+    audioDestination.stream.getAudioTracks().forEach(track => {
+      stream.addTrack(track);
+    });
 
+    let mimeType = "";
 
-    canvas.height =
-      1280;
-
-
-    const ctx =
-      canvas.getContext(
-        "2d"
-      );
-
-
-    /* VIDEO */
-
-    const videoStream =
-      canvas.captureStream(
-        30
-      );
-
-
-    /* AUDIO CONTEXT */
-
-    const AudioContext =
-      window.AudioContext ||
-      window.webkitAudioContext;
-
-
-    const audioContext =
-      new AudioContext();
-
-
-    const destination =
-      audioContext
-        .createMediaStreamDestination();
-
-
-    /* ADD AUDIO TRACK */
-
-    destination
-      .stream
-      .getAudioTracks()
-      .forEach(
-        track => {
-
-          videoStream.addTrack(
-            track
-          );
-
-        }
-      );
-
-
-    /* MIME TYPE */
-
-    let mimeType =
-      "";
-
-
-    if (
-      MediaRecorder.isTypeSupported(
-        "video/webm;codecs=vp9,opus"
-      )
-    ) {
-
-      mimeType =
-        "video/webm;codecs=vp9,opus";
-
+    if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")) {
+      mimeType = "video/webm;codecs=vp9,opus";
+    } else if (MediaRecorder.isTypeSupported("video/webm")) {
+      mimeType = "video/webm";
+    } else {
+      throw new Error("This browser cannot record WebM video.");
     }
 
-    else if (
-      MediaRecorder.isTypeSupported(
-        "video/webm"
-      )
-    ) {
-
-      mimeType =
-        "video/webm";
-
-    }
-
-    else {
-
-      alert(
-        "Your browser cannot create this video."
-      );
-
-      return;
-
-    }
-
-
-    /* RECORDER */
-
-    const recorder =
-      new MediaRecorder(
-        videoStream,
-        {
-          mimeType:
-            mimeType
-        }
-      );
-
-
+    const recorder = new MediaRecorder(stream, { mimeType });
     const chunks = [];
 
+    recorder.ondataavailable = event => {
+      if (event.data.size > 0) chunks.push(event.data);
+    };
 
-    recorder.ondataavailable =
-      event => {
-
-        if (
-          event.data.size > 0
-        ) {
-
-          chunks.push(
-            event.data
-          );
-
-        }
-
-      };
-
-
-    const finished =
-      new Promise(
-        resolve => {
-
-          recorder.onstop =
-            resolve;
-
-        }
+    const finished = new Promise((resolve, reject) => {
+      recorder.onstop = resolve;
+      recorder.onerror = () => reject(
+        new Error("Video recording failed.")
       );
+    });
 
-
-    /* START */
-
+    await audioContext.resume();
     recorder.start();
 
+    for (let i = 0; i < images.length; i++) {
+      await waitForImage(images[i]);
 
-    /* SCENES */
-
-    for (
-      let i = 0;
-      i < images.length;
-      i++
-    ) {
-
-
-      const img =
-        images[i];
-
-
-      await waitForImage(
-        img
+      setStatus(
+        `🎙️ Preparing narration for scene ${i + 1} of ${images.length}...`
       );
 
-
-      /* VOICE */
-
-      status.textContent =
-        `🎙️ Creating voice ${
-          i + 1
-        } of ${
-          images.length
-        }...`;
-
-
-      const audio =
-        await puter.ai.txt2speech(
-          scenes[i],
-          {
-            provider:
-              "aws-polly",
-
-            voice:
-              "Joanna",
-
-            engine:
-              "neural",
-
-            language:
-              "en-US"
-          }
-        );
-
+      const audio = await puter.ai.txt2speech(scenes[i]);
 
       if (!audio) {
-
-        throw new Error(
-          "Voice was not created."
-        );
-
+        throw new Error("Narration could not be generated.");
       }
 
+      const source = audioContext.createMediaElementSource(audio);
+      source.connect(audioDestination);
 
-      /* AUDIO SOURCE */
+      drawImageCover(ctx, images[i], canvas);
 
-      const source =
-        audioContext
-          .createMediaElementSource(
-            audio
-          );
-
-
-      source.connect(
-        destination
+      const gradient = ctx.createLinearGradient(
+        0, canvas.height - 380, 0, canvas.height
       );
 
+      gradient.addColorStop(0, "rgba(0,0,0,0)");
+      gradient.addColorStop(1, "rgba(0,0,0,0.85)");
 
-      /* DRAW IMAGE */
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, canvas.height - 380, canvas.width, 380);
 
-      ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-
-      drawImageCover(
-        ctx,
-        img,
-        canvas
-      );
-
-
-      /* TEXT BACKGROUND */
-
-      const gradient =
-        ctx.createLinearGradient(
-          0,
-          canvas.height - 350,
-          0,
-          canvas.height
-        );
-
-
-      gradient.addColorStop(
-        0,
-        "rgba(0,0,0,0)"
-      );
-
-
-      gradient.addColorStop(
-        1,
-        "rgba(0,0,0,0.8)"
-      );
-
-
-      ctx.fillStyle =
-        gradient;
-
-
-      ctx.fillRect(
-        0,
-        canvas.height - 350,
-        canvas.width,
-        350
-      );
-
-
-      /* TEXT */
-
-      ctx.fillStyle =
-        "white";
-
-
-      ctx.font =
-        "bold 34px Arial";
-
-
-      ctx.textAlign =
-        "center";
-
+      ctx.fillStyle = "white";
+      ctx.font = "bold 32px Arial";
+      ctx.textAlign = "center";
 
       drawWrappedText(
         ctx,
         scenes[i],
         canvas.width / 2,
-        canvas.height - 150,
+        canvas.height - 160,
         620,
         42
       );
 
+      setStatus(`🎬 Recording scene ${i + 1} of ${images.length}...`);
 
-      /* PLAY SCENE VOICE */
-
-      status.textContent =
-        `🎬 Playing scene ${
-          i + 1
-        } of ${
-          images.length
-        }...`;
-
-
-      await audio.play();
-
-
-      /* WAIT FOR VOICE */
-
-      await new Promise(
-        resolve => {
-
-          audio.onended =
-            resolve;
-
-        }
-      );
-
-
-      /* DISCONNECT */
-
-      source.disconnect();
-
-
-      /* PAUSE */
-
-      await sleep(
-        300
-      );
-
-    }
-
-
-    /* STOP */
-
-    recorder.stop();
-
-
-    await finished;
-
-
-    await audioContext.close();
-
-
-    /* VIDEO FILE */
-
-    const videoBlob =
-      new Blob(
-        chunks,
-        {
-          type:
-            mimeType
-        }
-      );
-
-
-    const videoURL =
-      URL.createObjectURL(
-        videoBlob
-      );
-
-
-    /* PREVIEW */
-
-    const preview =
-      document
-        .getElementById(
-          "videoPreview"
+      await new Promise((resolve, reject) => {
+        audio.onended = resolve;
+        audio.onerror = () => reject(
+          new Error("Narration playback failed.")
         );
 
+        audio.play().catch(reject);
+      });
 
-    preview.src =
-      videoURL;
+      source.disconnect();
+      await sleep(300);
+    }
 
+    recorder.stop();
+    await finished;
 
-    preview.style.display =
-      "block";
+    const blob = new Blob(chunks, { type: mimeType });
+    const videoURL = URL.createObjectURL(blob);
 
+    const preview = document.getElementById("videoPreview");
+    preview.src = videoURL;
+    preview.style.display = "block";
 
-    /* DOWNLOAD */
-
-    const link =
-      document
-        .createElement("a");
-
-
-    link.href =
-      videoURL;
-
-
-    link.download =
-      "my-ai-video-scene-by-scene.webm";
-
-
-    document
-      .body
-      .appendChild(
-        link
-      );
-
-
+    const link = document.createElement("a");
+    link.href = videoURL;
+    link.download = "my-ai-story-video.webm";
+    document.body.appendChild(link);
     link.click();
+    link.remove();
 
+    setStatus("✅ Video recording finished. Check your Downloads folder.");
 
-    document
-      .body
-      .removeChild(
-        link
-      );
-
-
-    status.textContent =
-      "✅ Your scene-by-scene video is ready!";
-
-
-  }
-
-
-  catch (error) {
-
-
-    console.error(
-      error
-    );
-
-
-    status.textContent =
-      "❌ Video creation failed.";
-
-
+  } catch (error) {
+    console.error(error);
+    setStatus("❌ Video creation failed.");
     alert(
-      "The video could not be created. Please try again."
+      "The video could not be created: " + error.message +
+      "\nPlease try again."
     );
 
+  } finally {
+    if (audioContext && audioContext.state !== "closed") {
+      await audioContext.close().catch(() => {});
+    }
+
+    button.disabled = false;
   }
-
 }
-
-
-
-/* =========================
-   WRAP TEXT
-========================= */
-
-function drawWrappedText(
-  ctx,
-  text,
-  x,
-  y,
-  maxWidth,
-  lineHeight
-) {
-
-
-  const words =
-    text.split(" ");
-
-
-  let line = "";
-
-
-  const lines = [];
-
-
-  for (
-    let n = 0;
-    n < words.length;
-    n++
-  ) {
-
-
-    const testLine =
-      line +
-      words[n] +
-      " ";
-
-
-    const metrics =
-      ctx.measureText(
-        testLine
-      );
-
-
-    if (
-      metrics.width >
-        maxWidth &&
-      n > 0
-    ) {
-
-
-      lines.push(
-        line
-      );
-
-
-      line =
-        words[n] +
-        " ";
-
-
-    }
-
-    else {
-
-      line =
-        testLine;
-
-    }
-
-  }
-
-
-  lines.push(
-    line
-  );
-
-
-  const startY =
-    y -
-    (
-      (
-        lines.length - 1
-      ) *
-      lineHeight
-    ) / 2;
-
-
-  lines.forEach(
-    (
-      line,
-      index
-    ) => {
-
-
-      ctx.fillText(
-        line,
-        x,
-        startY +
-        index *
-        lineHeight
-      );
-
-    }
-  );
-
-}
-
-
-
-/* =========================
-   SLEEP
-========================= */
-
-function sleep(ms) {
-
-  return new Promise(
-    resolve =>
-      setTimeout(
-        resolve,
-        ms
-      )
-  );
-
-}
-
-
-
-/* =========================
-   ESCAPE HTML
-========================= */
-
-function escapeHTML(text) {
-
-  return text
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
 </script>
-
 </body>
 </html>
